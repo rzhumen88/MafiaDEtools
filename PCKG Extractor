@@ -1,0 +1,50 @@
+#mafia de pckg extractor
+
+#16b header:
+    #4b b'PCKG'
+    #4b ver mb
+    #4b qty files
+    #4b FF FF FF FF
+
+#32b file info: -NEEDS MORE RESEARCH-
+    #4b ?
+    #4b ?
+    #4b offset
+    #4b zero padding
+    #4b len
+    #4b len again?
+    #2b height
+    #2b width
+    #4b zero padding
+
+import os
+import struct
+
+
+def pckgExtract(filename):
+    dir_name = filename.replace('.pckg', '')
+    file_num = 0
+    if not os.path.isdir(dir_name):
+        os.mkdir(dir_name)
+    with open(filename, 'rb') as f:
+        data = f.read(16)
+        header = data[:4]
+        ver, total_files = struct.unpack('II', data[4:12])
+        file_info_size = total_files * 32
+        if not header == b'PCKG':
+            print('Wrong header')
+            return 0
+        data = f.read(file_info_size)
+        for i in range(0, file_info_size, 32):
+            _, _, offset, _, size, _, height, width, _ = struct.unpack('IIIIIIHHI', data[i:i+32])
+            f.seek(offset)
+            extracted = f.read(size)
+            extracted_name = dir_name+'/'+str(j).zfill(8)+'.dds'
+            with open(extracted_name, 'wb') as f2:
+                f2.write(extracted)
+                print(f'Extracted: {extracted_name} | {width}x{height} | Size: {round(size/1000, 2)}kb')
+                file_num += 1
+
+if __name__ == '__main__':
+    pckgExtract('images_streaming.pckg')
+    input('done!')
