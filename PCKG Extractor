@@ -1,37 +1,13 @@
-#mafia de pckg extractor
-
-#16b header:
-    #4b b'PCKG'
-    #4b ver mb
-    #4b qty files
-    #4b FF FF FF FF
-
-#32b file info: -NEEDS MORE RESEARCH-
-    #8b file key
-    #4b offset
-    #4b zero padding
-    #4b len
-    #4b len again?
-    #2b height
-    #2b width
-    #4b zero padding
-
 import os
 import struct
 
 def byteStreamToStr(bs: bytes):
-    tbl = {'0000': '0', '0001': '1', '0010': '2','0011': '3',
-           '0100': '4', '0101': '5', '0110': '6','0111': '7',
-           '1000': '8', '1001': '9', '1010': 'A','1011': 'B',
-           '1100': 'C', '1101': 'D', '1110': 'E','1111': 'F',}
     s = ''
     for b in bs:
-        nibble = bin(b)[2:6].zfill(4)
-        nibble_ = bin(b)[6:].zfill(4)
-        s+= tbl[nibble] + tbl[nibble_]
-    return s
+        s += hex(b)[2:].zfill(2)
+    return s.upper()
 
-def pckgExtract(filename):
+def pckgExtract(filename: str):
     dir_name = filename.replace('.pckg', '')
     if not os.path.isdir(dir_name):
         os.mkdir(dir_name)
@@ -45,7 +21,7 @@ def pckgExtract(filename):
             return 0
         data = f.read(file_info_size)
         for i in range(0, file_info_size, 32):
-            name = byteStreamToStr(data[i:i+8]).upper()
+            name = byteStreamToStr(data[i:i+8][::-1])
             offset, _, size, _, height, width, _ = struct.unpack('IIIIHHI', data[i+8:i+32])
             f.seek(offset)
             extracted = f.read(size)
